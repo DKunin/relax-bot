@@ -1,9 +1,11 @@
 const { Telegraf } = require('telegraf');
 const schedule = require('node-schedule');
 require('dotenv').config();
+const fs = require('fs');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const userId = process.env.USER_ID; // Replace with your Telegram ID or keep in .env file
+const startDate = new Date(process.env.START_DATE); // Read start date from .env file
 
 const relaxationPlan = {
     week1: {
@@ -29,10 +31,9 @@ const relaxationPlan = {
 };
 
 const getCurrentWeek = () => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 1); // Starts tomorrow
-    const currentWeek = Math.ceil(((new Date() - startDate) / (1000 * 60 * 60 * 24)) / 7) + 1;
-    return `week${Math.min(currentWeek, 4)}`;
+    const now = new Date();
+    const weeksElapsed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24 * 7)) + 1;
+    return `week${Math.min(weeksElapsed, 4)}`;
 };
 
 const scheduleMessages = () => {
@@ -40,16 +41,21 @@ const scheduleMessages = () => {
     
     schedule.scheduleJob({ hour: 8, minute: 0 }, () => {
         bot.telegram.sendMessage(userId, `🌞 Morning Routine: ${relaxationPlan[week].morning}`);
+        bot.telegram.sendMessage(userId, "💡 Explanation: Start with deep diaphragmatic breathing, focusing on slow inhales and exhales. Then, do gentle stretches to loosen up your body and release tension.");
     });
     
     schedule.scheduleJob({ hour: 12, minute: 0 }, () => {
         bot.telegram.sendMessage(userId, `🌤 Midday Routine: ${relaxationPlan[week].midday}`);
+        bot.telegram.sendMessage(userId, "💡 Explanation: Progressive Muscle Relaxation helps you release stress. Tense and relax each muscle group, starting from your hands and working up to your shoulders and jaw.");
     });
     
     schedule.scheduleJob({ hour: 20, minute: 0 }, () => {
         bot.telegram.sendMessage(userId, `🌙 Evening Routine: ${relaxationPlan[week].evening}`);
+        bot.telegram.sendMessage(userId, "💡 Explanation: Wind down with a body scan meditation to notice and release residual tension. Follow up with sighing breath for deeper relaxation, and reflect in your journal about moments of stress and how you handled them today.");
     });
 };
 
+bot.telegram.sendMessage(userId, "📢 Relaxation bot has started! Your regimen is now active.");
+bot.telegram.sendMessage(userId, "💡 Explanation: You will receive daily reminders with your relaxation exercises, along with a brief explanation to guide your practice.");
 scheduleMessages();
 bot.launch().then(() => console.log('Bot is running and messages are scheduled.'));
